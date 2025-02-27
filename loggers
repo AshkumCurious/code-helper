@@ -1,0 +1,42 @@
+//Custom Debug Print for printing logs on terminal in debug mode with different colors
+
+customDebugPrint(dynamic value) {
+  if (!kDebugMode) {
+    return;
+  }
+  debugPrint("\x1B[33mDebugPRINT: $value\x1B[0m");
+}
+
+
+//Custom print that can be used to print responses from api calls
+
+customPrint(
+  Response response, {
+  String? url,
+  Map<String, dynamic>? body,
+  String? method,
+}) {
+  if (!kDebugMode) {
+    return;
+  }
+  debugPrint(
+    "\x1B[33mStart----------------------------------------------------------------------------\x1B[0m",
+  );
+  debugPrint(
+    "\x1B[33m---------------------------------------------------------------------------------\x1B[0m",
+  );
+  debugPrint("\x1B[34mMethod: $method\x1B[0m");
+  debugPrint("\x1B[34mUrl: $url\x1B[0m");
+  debugPrint("\x1B[37mBody: $body\x1B[0m");
+  debugPrint("\x1B[34mStatus code: ${response.statusCode}\x1B[0m")
+  log(
+    "\x1B[32mResponse: ${response.body}\x1B[0m",
+    name: "$url",
+  );
+  debugPrint(
+    "\x1B[33m----------------------------------------------------------------------------------\x1B[0m",
+  );
+  debugPrint(
+    "\x1B[33m-------------------------------------------------------------------------------End\x1B[0m",
+  );
+}
