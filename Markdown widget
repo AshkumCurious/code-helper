@@ -1,0 +1,124 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';  
+import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:markdown/markdown.dart' as md;
+import 'package:slato_exam/widgets/custom_video_player.dart';
+
+class MarkdownLatexWidget extends StatelessWidget {
+  final String markdownText;
+  final TextStyle? textStyle;
+  final double latexFontSize;
+
+  const MarkdownLatexWidget({
+    super.key,
+    required this.markdownText,
+    this.textStyle,
+    this.latexFontSize = 14,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: MediaQuery.sizeOf(context).width * 0.9,
+      child: MarkdownBody(
+        data: markdownText,
+        styleSheet: MarkdownStyleSheet(
+          p: textStyle,
+        ),
+        builders: {
+          'math': LatexElementBuilder(
+            textStyle: textStyle,
+            fontSize: latexFontSize,
+          ),
+          'video': VideoElementBuilder(),
+        },
+        inlineSyntaxes: [
+          InlineLatexSyntax(),
+          VideoSyntax(),
+        ],
+      ),
+    );
+  }
+}
+
+// Custom syntax for inline LaTeX
+class InlineLatexSyntax extends md.InlineSyntax {
+  InlineLatexSyntax() : super(r'\${1,2}(.+?)\${1,2}');
+
+  @override
+  bool onMatch(md.InlineParser parser, Match match) {
+    final content = match[1]!;
+
+    // Add the math element
+    parser.addNode(md.Element('math', [md.Text(content)]));
+    return true;
+  }
+}
+
+// Custom syntax for video links
+class VideoSyntax extends md.InlineSyntax {
+  VideoSyntax() : super(r'\[(.*?)\]\((https?:\/\/[^\)]+)\)');
+
+  @override
+  bool onMatch(md.InlineParser parser, Match match) {
+    // match[1] contains the text inside square brackets
+    // match[2] contains the URL inside parentheses
+    parser.addNode(md.Element('video', [md.Text(match[2]!)]));
+    return true;
+  }
+}
+
+class LatexElementBuilder extends MarkdownElementBuilder {
+  final TextStyle? textStyle;
+  final double fontSize;
+
+  LatexElementBuilder({
+    this.textStyle,
+    this.fontSize = 14,
+  });
+
+  @override
+  Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
+    return Math.tex(
+      element.textContent,
+      textStyle: preferredStyle,
+      textScaleFactor: 1.0,
+    );
+  }
+}
+
+class VideoElementBuilder extends MarkdownElementBuilder {
+  @override
+  Widget? visitElementAfter(md.Element element, TextStyle? preferredStyle) {
+    return CustomVideoPlayer(videoUrl: element.textContent);     //Create your own video player and use it as CustomVideoPlayer
+  }
+}
+
+const String ltext = '''# Test Markdown with Video and LaTeX
+
+## Video Example
+Here's a sample video from a public URL:
+[video](https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4)
+
+## Math Examples
+The quadratic formula is: \$x = frac{-b pm sqrt{b^2-4ac}}{2a}\$
+
+Einstein's famous equation: \$E = mc^2\$
+
+The sum of a series: \$sum_{n=1}^{infty} frac{1}{n^2} = frac{pi^2}{6}\$
+
+## Your Original Table
+i) যদি নিচের তথ্যের মধ্যমা 32 হয় এবং পরিসংখ্যার সমষ্টি 100 হয়, তাহলে x এবং y এর মান নির্ণয় করো।
+
+| শ্রেণি অন্তর | 0-10 | 10-20 | 20-30 | 30-40 | 40-50 | 50-60 |
+|------------|-------|--------|--------|--------|--------|--------|
+| পরিসংখ্যা | 10 | x | 25 | 30 | y | 10 |
+
+## More Complex LaTeX
+A matrix example:
+\$begin{pmatrix} a & b \\ c & d end{pmatrix}\$
+
+## Another Video
+Here's another sample video:
+[video](https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4)
+[vimeo](https://player.vimeo.com/progressive_redirect/playback/909613464/rendition/720p/file.mp4?loc=external&oauth2_token_id=1751888712&signature=bfbf59d1f03f5b5c57c393c441a46131d7abdbeeff0dfec8ea263bb0ddde4ff0)''';
